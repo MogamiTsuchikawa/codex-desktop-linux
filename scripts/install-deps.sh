@@ -43,6 +43,33 @@ has_compatible_nodejs() {
         && command -v npx &>/dev/null
 }
 
+version_major() {
+    local version="$1"
+    local major
+
+    version="${version#*:}"
+    if [[ "$version" =~ ^([0-9]+) ]]; then
+        major="${BASH_REMATCH[1]}"
+        printf '%s\n' "$major"
+        return 0
+    fi
+
+    return 1
+}
+
+apt_installed_nodejs_major() {
+    local version
+    version="$(dpkg-query -W -f='${Version}\n' nodejs 2>/dev/null || true)"
+    [ -n "$version" ] || return 1
+    version_major "$version"
+}
+
+apt_has_compatible_system_nodejs() {
+    local major
+    major="$(apt_installed_nodejs_major 2>/dev/null || true)"
+    [ -n "$major" ] && [ "$major" -ge "$MIN_NODE_MAJOR" ]
+}
+
 validate_nodejs_major() {
     case "$NODEJS_MAJOR" in
         ''|*[!0-9]*)
@@ -153,7 +180,12 @@ current_node_version_suffix() {
 ensure_nodejs_compatible() {
     local distro="$1"
 
-    if has_compatible_nodejs; then
+    if [ "$distro" = "apt" ] && has_compatible_nodejs && apt_has_compatible_system_nodejs; then
+        report_nodejs_toolchain
+        return
+    fi
+
+    if [ "$distro" != "apt" ] && has_compatible_nodejs; then
         report_nodejs_toolchain
         return
     fi
@@ -163,23 +195,28 @@ ensure_nodejs_compatible() {
 Install a supported Node.js version for this distro, then re-run this script."
     fi
 
-    warn "Node.js ${MIN_NODE_MAJOR}+ with npm and npx is required$(current_node_version_suffix)"
+    if has_compatible_nodejs; then
+        warn "PATH already has a compatible Node.js toolchain$(current_node_version_suffix), but the installed apt nodejs package is below ${MIN_NODE_MAJOR}.
+Codex Desktop native packages require a system nodejs package >= ${MIN_NODE_MAJOR}, so bootstrapping one now."
+    else
+        warn "Node.js ${MIN_NODE_MAJOR}+ with npm and npx is required$(current_node_version_suffix)"
+    fi
     install_apt_distro_nodejs_if_compatible || true
 
-    if has_compatible_nodejs; then
+    if has_compatible_nodejs && apt_has_compatible_system_nodejs; then
         report_nodejs_toolchain
         return
     fi
 
     install_nodesource_nodejs
 
-    if has_compatible_nodejs; then
+    if has_compatible_nodejs && apt_has_compatible_system_nodejs; then
         report_nodejs_toolchain
         return
     fi
 
-    error "NodeSource install completed, but Node.js ${MIN_NODE_MAJOR}+ with npm and npx is still unavailable.
-Check apt output above or install Node.js ${MIN_NODE_MAJOR}+ manually."
+    error "NodeSource install completed, but a system nodejs package >= ${MIN_NODE_MAJOR} is still unavailable.
+Check apt output above or install a supported nodejs package manually."
 }
 
 # ---------------------------------------------------------------------------

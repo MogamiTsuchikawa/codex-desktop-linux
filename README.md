@@ -30,18 +30,30 @@ Anything systemd-based should work for the optional auto-updater service (`syste
 
 ## Quick install
 
-The fastest path: install deps, build the local app, build the native package, install it.
+The fastest path is now a single command that installs dependencies if needed, downloads the latest upstream `Codex.dmg`, rebuilds the Linux app, packages it for your distro, installs it, and prints the current and new versions:
 
 ```bash
 git clone https://github.com/ilysenko/codex-desktop-linux.git
 cd codex-desktop-linux
+bash scripts/install-latest.sh
+```
+
+This script always runs `./install.sh --fresh`, so it replaces any cached DMG with the latest upstream build before packaging. It also prints:
+
+- the **currently installed Codex App version**
+- the **newly rebuilt Codex App version**
+- the **final installed native package version**
+
+On Debian / Ubuntu, the script also ensures the **system-installed** `nodejs` package is `>= 20`, not just an `nvm` or other user-local Node.js on your `PATH`, because the native package depends on `nodejs (>= 20)` for future local rebuilds.
+
+If you prefer the manual multi-step flow, it is still available:
+
+```bash
 bash scripts/install-deps.sh
 make build-app
 make package        # auto-detects deb / rpm / pacman
 make install        # installs the newest package from dist/
 ```
-
-`make package` picks the format that matches your distro. `make install` then runs the right `dpkg -i` / `dnf install` / `zypper install` / `pacman -U` against the freshly built artifact.
 
 The first launch can auto-install the Codex CLI (`@openai/codex`) for you when `npm` is available; you can also pre-install with `npm i -g @openai/codex` (or `npm i -g --prefix ~/.local @openai/codex` if you don't want a root-level install).
 
@@ -260,6 +272,16 @@ make build-app
 ```
 
 `ELECTRON_HEADERS_URL` is passed to `@electron/rebuild --dist-url`. It must provide both `node-v<version>-headers.tar.gz` and the matching `SHASUMS256.txt`; ordinary Electron runtime mirrors may not include the headers checksum format that `node-gyp` expects.
+
+### One-command install or update
+
+If you want the full dependency-install + latest-DMG rebuild + package-install flow in one command:
+
+```bash
+bash scripts/install-latest.sh
+```
+
+The script prints the currently installed version, rebuilds from the latest upstream DMG, installs the resulting native package, and verifies that the final installed Codex App version matches the newly rebuilt one.
 
 ## Native package formats
 

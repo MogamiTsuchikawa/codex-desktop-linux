@@ -126,7 +126,11 @@ install:
 			echo "[make] No Debian package found. Run 'make deb' first." >&2; exit 1; \
 		fi; \
 		echo "[make] Installing $$deb"; \
-		sudo dpkg -i "$$deb"; \
+		if command -v apt-get >/dev/null 2>&1; then \
+			sudo apt-get install -y "$$deb"; \
+		else \
+			sudo dpkg -i "$$deb"; \
+		fi; \
 	elif command -v zypper >/dev/null 2>&1; then \
 		rpm="$${RPM:-$$(ls -1 $(RPM_GLOB) 2>/dev/null | sort -V | tail -n 1)}"; \
 		if [ -z "$$rpm" ]; then \
