@@ -424,6 +424,9 @@ find_codex_cli() {
     for candidate in \
         "$HOME/.nvm/versions/node/current/bin/codex" \
         "$HOME/.nvm/versions/node"/*/bin/codex \
+        "$HOME/.local/share/mise/shims/codex" \
+        "$HOME/.local/share/mise/installs/node/latest/bin/codex" \
+        "$HOME/.local/share/mise/installs/node"/*/bin/codex \
         "$HOME/.local/share/pnpm/codex" \
         "$HOME/.local/bin/codex" \
         "/usr/local/bin/codex" \

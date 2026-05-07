@@ -54,9 +54,14 @@ build_native_modules() {
 
     info "Compiling for Electron v$ELECTRON_VERSION (this takes ~1 min)..."
     info "Using Electron headers: $ELECTRON_HEADERS_URL"
+    local native_makeflags="${CODEX_NATIVE_MAKEFLAGS:--j1}"
+    local native_npm_jobs="${CODEX_NATIVE_NPM_JOBS:-1}"
+    info "Native rebuild concurrency: electron-rebuild sequential, MAKEFLAGS=$native_makeflags"
+    MAKEFLAGS="$native_makeflags" \
+    npm_config_jobs="$native_npm_jobs" \
     npm_config_disturl="$ELECTRON_HEADERS_URL" \
     NPM_CONFIG_DISTURL="$ELECTRON_HEADERS_URL" \
-    npx --yes @electron/rebuild -v "$ELECTRON_VERSION" --force --dist-url "$ELECTRON_HEADERS_URL" 2>&1 >&2
+    npx --yes @electron/rebuild -v "$ELECTRON_VERSION" --force --sequential --dist-url "$ELECTRON_HEADERS_URL" 2>&1 >&2
 
     info "Native modules built successfully"
 
@@ -107,4 +112,3 @@ download_electron() {
 
     info "Electron ready"
 }
-

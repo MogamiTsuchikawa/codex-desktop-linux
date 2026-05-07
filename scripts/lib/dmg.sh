@@ -110,12 +110,17 @@ PY
 
     local resources_dir="$app_dir/Contents/Resources"
     if [ -f "$resources_dir/app.asar" ]; then
-        detected=$(npx --yes asar extract-file "$resources_dir/app.asar" package.json 2>/dev/null |
-            node -e '
+        local package_extract_dir="$WORK_DIR/asar-package-json"
+        rm -rf "$package_extract_dir"
+        mkdir -p "$package_extract_dir"
+
+        if (cd "$package_extract_dir" && npx --yes asar extract-file "$resources_dir/app.asar" package.json >/dev/null 2>&1); then
+            detected=$(node -e '
 const fs = require("node:fs");
-const pkg = JSON.parse(fs.readFileSync(0, "utf8"));
+const pkg = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
 process.stdout.write(String(pkg.devDependencies?.electron ?? pkg.dependencies?.electron ?? ""));
-' 2>/dev/null || true)
+' "$package_extract_dir/package.json" 2>/dev/null || true)
+        fi
         if detected_version=$(sanitize_electron_version "$detected"); then
             ELECTRON_VERSION="$detected_version"
             info "Detected Electron version from package.json: $ELECTRON_VERSION"
@@ -128,4 +133,3 @@ process.stdout.write(String(pkg.devDependencies?.electron ?? pkg.dependencies?.e
     warn "Could not auto-detect Electron version; using fallback $ELECTRON_VERSION"
     return 0
 }
-

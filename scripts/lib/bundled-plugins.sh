@@ -35,7 +35,9 @@ build_linux_computer_use_backend() {
     fi
 
     info "Building Linux Computer Use backend..."
-    if ! (cd "$SCRIPT_DIR" && "$cargo_cmd" build --release -p codex-computer-use-linux >&2); then
+    local cargo_jobs="${CODEX_CARGO_JOBS:-1}"
+    info "Cargo build concurrency: -j$cargo_jobs"
+    if ! (cd "$SCRIPT_DIR" && "$cargo_cmd" build --release -p codex-computer-use-linux -j "$cargo_jobs" >&2); then
         warn "Failed to build Linux Computer Use backend"
         return 1
     fi
@@ -207,4 +209,3 @@ install_bundled_plugin_resources() {
 
     info "Linux-safe bundled plugins installed"
 }
-

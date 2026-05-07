@@ -60,6 +60,9 @@ Environment variables:
   CODEX_APP_DISPLAY_NAME
                       Override display name (default: Codex Desktop)
   CODEX_WEBVIEW_PORT  Override webview HTTP port (default: 5175, or 5176 for non-default app ids)
+  CODEX_INSTALL_WORK_ROOT
+                      Override large temporary work directory
+                      (default: ~/.cache/codex-desktop-linux/installer-work, or TMPDIR when set)
   ELECTRON_HEADERS_URL
                       Override the Electron headers URL used by @electron/rebuild
                       (default: https://artifacts.electronjs.org/headers/dist)
@@ -173,4 +176,3 @@ Set SEVENZIP_SYSTEM_INSTALL=1 to install into /usr/local/bin instead."
 
     info "All dependencies found (using $SEVEN_ZIP_CMD)"
 }
-
